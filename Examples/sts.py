@@ -22,7 +22,6 @@ def start_server():
                     message = data.decode().strip()
                     print(f"Получено сообщение: {message}")
 
-                    # Обработка данных локации
                     if message.startswith("LOCATION_DATA:"):
                         try:
                             location_json = message.replace("LOCATION_DATA:", "").strip()
@@ -54,3 +53,4 @@ def start_server():
 
 if __name__ == "__main__":
     start_server()
+
