@@ -1,56 +1,77 @@
-import socket
+import zmq
 import json
+from datetime import datetime
 
-def start_server():
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind(('localhost', 12345))
-    server_socket.listen(1)
-    print("Сервер запущен и ожидает подключений...")
+
+def start_zeromq_server():
+    context = zmq.Context()
+
+    socket = context.socket(zmq.REP)
+
+    socket.bind("tcp://*:12345")
+
+    print("ZeroMQ сервер запущен на порту 12345")
 
     try:
         while True:
-            client_socket, client_address = server_socket.accept()
-            print(f"Подключение установлено с {client_address}")
+            message = socket.recv_string()
+            print(f"Получено сообщение: {message}")
 
-            try:
-                while True:
-                    data = client_socket.recv(1024)
-                    if not data:
-                        break
+            if message.startswith("LOCATION_DATA:"):
+                try:
+                    location_json = message.replace("LOCATION_DATA:", "").strip()
+                    location_data = json.loads(location_json)
 
-                    message = data.decode().strip()
-                    print(f"Получено сообщение: {message}")
+                    print("Данные о локации::")
+                    print(f"Широта: {location_data.get('latitude')}")
+                    print(f"Долгота: {location_data.get('longitude')}")
+                    print(f"Высота: {location_data.get('altitude')} м")
+                    print(f"Точность: {location_data.get('accuracy')} м")
+                    print(f"Время: {location_data.get('time_formatted')}")
 
-                    if message.startswith("LOCATION_DATA:"):
-                        try:
-                            location_json = message.replace("LOCATION_DATA:", "").strip()
-                            location_data = json.loads(location_json)
-                            print("Данные локации получены:")
-                            print(f"  Широта: {location_data.get('latitude')}")
-                            print(f"  Долгота: {location_data.get('longitude')}")
-                            print(f"  Высота: {location_data.get('altitude')}")
-                            print(f"  Время: {location_data.get('time_formatted')}")
-                            
-                            response = f"Локация получена: {location_data.get('latitude')}, {location_data.get('longitude')}"
-                        except json.JSONDecodeError as e:
-                            response = f"Ошибка парсинга локации: {e}"
-                    else:
-                        response = f"Сервер получил: {message}"
+                    save_location_to_file(location_data)
 
-                    client_socket.send(f"{response}\n".encode())
+                    response = f"SUCCESS: Локация получена {datetime.now().strftime('%H:%M:%S')}"
 
-            except Exception as e:
-                print(f"Ошибка: {e}")
-            finally:
-                client_socket.close()
-                print("Соединение закрыто")
+                except json.JSONDecodeError as e:
+                    response = f"ERROR: Ошибка парсинга JSON - {e}"
+                except Exception as e:
+                    response = f"ERROR: {e}"
+            else:
+                response = f"ECHO: {message}"
+
+            socket.send_string(response)
 
     except KeyboardInterrupt:
-        print("Сервер остановлен")
+        print("\nСервер остановлен")
     finally:
-        server_socket.close()
+        socket.close()
+        context.term()
+
+
+def save_location_to_file(location_data):
+    try:
+        filename = f"locations_{datetime.now().strftime('%Y%m%d')}.json"
+
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                existing_data = json.load(f)
+        except FileNotFoundError:
+            existing_data = []
+
+        existing_data.append({
+            **location_data,
+            "received_at": datetime.now().isoformat()
+        })
+
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(existing_data, f, ensure_ascii=False, indent=2)
+
+        print(f"Данные сохранены в {filename}")
+
+    except Exception as e:
+        print(f"Ошибка сохранения в файл: {e}")
+
 
 if __name__ == "__main__":
-    start_server()
-
+    start_zeromq_server()
