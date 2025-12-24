@@ -5,6 +5,7 @@ from datetime import datetime
 import sys
 import time
 import traceback
+import os
 
 
 class Database:
@@ -87,6 +88,35 @@ class Database:
             return False
 
 
+def save_to_json(data):
+    try:
+        all_data = []
+        json_file = "loc.json"
+
+        if os.path.exists(json_file):
+            with open(json_file, 'r') as f:
+                all_data = json.load(f)
+
+        if isinstance(data, dict):
+            data['server_time'] = datetime.now().isoformat()
+            all_data.append(data)
+        elif isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict):
+                    item['server_time'] = datetime.now().isoformat()
+                    all_data.append(item)
+
+        with open(json_file, 'w') as f:
+            json.dump(all_data, f, indent=2)
+
+        print(f"Сохранено в JSON: {len(all_data)} записей")
+        return True
+
+    except Exception as e:
+        print(f"Ошибка сохранения в JSON: {e}")
+        return False
+
+
 def debug_server():
     print("Запуск отладочного сервера...")
 
@@ -131,6 +161,8 @@ def debug_server():
                             data_json = json.loads(data_str)
                             print(f"Успешный парсинг JSON")
                             print(f"Тип данных: {type(data_json)}")
+
+                            save_to_json(data_json)
 
                             if isinstance(data_json, dict):
                                 print(f"Содержимое словаря:")
