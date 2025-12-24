@@ -34,7 +34,7 @@ def get_location_data():
 
 def plot_locations(data):
     if not data:
-        print("❌ Нет данных для отображения")
+        print("Нет данных для отображения")
         return
 
     timestamps = [row[0] for row in data]
@@ -100,7 +100,6 @@ def plot_locations(data):
     ax5.legend()
     ax5.grid(True, alpha=0.3)
 
-    # 6. Карта тепла траектории
     ax6 = plt.subplot(2, 3, 6)
     heatmap, xedges, yedges = np.histogram2d(longitudes, latitudes, bins=20)
     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
@@ -118,9 +117,8 @@ def plot_locations(data):
 
 
 def plot_simple_map(data):
-    """Простой график только с координатами"""
     if not data:
-        print("❌ Нет данных")
+        print("Нет данных")
         return
 
     latitudes = [row[1] for row in data]
@@ -128,15 +126,12 @@ def plot_simple_map(data):
 
     plt.figure(figsize=(10, 8))
 
-    # Точки
     plt.scatter(longitudes, latitudes, c='blue', s=50, alpha=0.7,
                 edgecolors='black', linewidth=0.5)
 
-    # Линия пути
     if len(data) > 1:
         plt.plot(longitudes, latitudes, 'r-', alpha=0.5, linewidth=2)
 
-    # Начальная и конечная точки
     if len(data) >= 2:
         plt.scatter(longitudes[0], latitudes[0], c='green', s=200,
                     marker='o', label='Начало', edgecolors='black')
@@ -149,7 +144,6 @@ def plot_simple_map(data):
     plt.grid(True, alpha=0.3)
     plt.legend()
 
-    # Добавить сетку координат
     plt.gca().set_aspect('equal', adjustable='box')
 
     plt.tight_layout()
@@ -157,10 +151,9 @@ def plot_simple_map(data):
 
 
 def plot_realtime_monitor():
-    """Мониторинг в реальном времени"""
     import time
 
-    plt.ion()  # Включить интерактивный режим
+    plt.ion()
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
     while True:
@@ -168,7 +161,7 @@ def plot_realtime_monitor():
             data = get_location_data()
 
             if not data:
-                print("Ожидание данных...")
+                print("Ожидание данных")
                 time.sleep(5)
                 continue
 
@@ -176,11 +169,9 @@ def plot_realtime_monitor():
             longitudes = [row[2] for row in data]
             timestamps = [row[0] for row in data]
 
-            # Очистить графики
             ax1.clear()
             ax2.clear()
 
-            # График 1: Траектория
             ax1.scatter(longitudes, latitudes, c='blue', s=30, alpha=0.6)
             ax1.plot(longitudes, latitudes, 'r-', alpha=0.3)
             ax1.set_xlabel('Долгота')
@@ -188,7 +179,6 @@ def plot_realtime_monitor():
             ax1.set_title(f'Траектория ({len(data)} точек)')
             ax1.grid(True, alpha=0.3)
 
-            # График 2: Временная шкала
             time_nums = mdates.date2num(timestamps)
             ax2.plot(timestamps, range(len(timestamps)), 'b-')
             ax2.set_xlabel('Время')
@@ -201,7 +191,7 @@ def plot_realtime_monitor():
                          fontsize=10)
             plt.tight_layout()
             plt.draw()
-            plt.pause(5)  # Обновлять каждые 5 секунд
+            plt.pause(5)
 
         except KeyboardInterrupt:
             print("\nОстановка мониторинга...")
@@ -217,7 +207,7 @@ def plot_realtime_monitor():
 def main_menu():
     while True:
         print("\n" + "=" * 50)
-        print("📊 ВИЗУАЛИЗАЦИЯ ДАННЫХ ИЗ POSTGRESQL")
+        print("ВИЗУАЛИЗАЦИЯ ДАННЫХ ИЗ POSTGRESQL")
         print("=" * 50)
         print("1. Полный анализ (6 графиков)")
         print("2. Простая карта местоположения")
@@ -277,7 +267,7 @@ def export_to_csv():
 
     cursor.close()
     conn.close()
-    print(f"✅ Экспортировано {len(data)} записей в location_data.csv")
+    print(f"Экспортировано {len(data)} записей в location_data.csv")
 
 
 def show_statistics():
@@ -287,7 +277,7 @@ def show_statistics():
     cursor.execute("SELECT COUNT(*) FROM location_data")
     total = cursor.fetchone()[0]
 
-    print(f"\n📊 СТАТИСТИКА БАЗЫ ДАННЫХ")
+    print(f"\nСТАТИСТИКА БАЗЫ ДАННЫХ")
     print("=" * 40)
     print(f"Всего записей: {total}")
 
@@ -303,7 +293,7 @@ def show_statistics():
             ORDER BY count DESC
         """)
 
-        print("\n📶 Типы сетей:")
+        print("\nТипы сетей:")
         for net_type, count in cursor.fetchall():
             percent = (count / total) * 100
             print(f"  {net_type or 'Unknown'}: {count} ({percent:.1f}%)")
@@ -318,7 +308,7 @@ def show_statistics():
         """)
 
         min_lat, max_lat, min_lon, max_lon = cursor.fetchone()
-        print(f"\n📍 Диапазон координат:")
+        print(f"\nДиапазон координат:")
         print(f"  Широта: {min_lat} — {max_lat}")
         print(f"  Долгота: {min_lon} — {max_lon}")
 
