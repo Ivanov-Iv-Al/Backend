@@ -117,15 +117,15 @@ def save_to_json(data):
         return False
 
 
-def debug_server():
-    print("Запуск отладочного сервера...")
+def start_server():
+    print("Запуск отладочного сервера")
 
     context = zmq.Context()
     socket = context.socket(zmq.REP)
     socket.bind("tcp://*:12345")
 
     print("Отладочный сервер запущен на tcp://*:12345")
-    print("Ожидание подключений...")
+    print("Ожидание подключений")
 
     try:
         db = Database()
@@ -136,8 +136,7 @@ def debug_server():
     try:
         while True:
             try:
-                print("\n" + "=" * 50)
-                print("Ожидание сообщения...")
+                print("Ожидание сообщения")
                 message = socket.recv()
                 print(f"Получено сообщение длиной: {len(message)} байт")
 
@@ -198,7 +197,7 @@ def debug_server():
                 socket.send_string(response)
 
             except KeyboardInterrupt:
-                print("\nОстановка сервера...")
+                print("\nОстановка сервера")
                 break
             except Exception as e:
                 print(f"Ошибка: {e}")
@@ -211,6 +210,4 @@ def debug_server():
             db.conn.close()
         print("Сервер остановлен")
 
-
-if __name__ == "__main__":
-    debug_server()
+start_server()
